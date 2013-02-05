@@ -10,7 +10,7 @@ pygments: true
 # so be sure to set them if your theme uses them.
 #
 title : Ralf Kistner's blog
-tagline: Coding blog
+tagline: Ralf's coding blog
 author :
   name : Ralf Kistner
   email : ralf.kistner@gmail.com

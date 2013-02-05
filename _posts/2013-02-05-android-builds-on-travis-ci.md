@@ -1,14 +1,16 @@
 ---
 layout: post
 title: "Android builds on Travis CI"
-description: ""
+description: "Running integration tests for an Android Maven project in multiple emulators on Travis CI."
 category: android
-excerpt: my fist blog
-tags: [android ci]
+excerpt: "Running integration tests for an Android Maven project in multiple emulators on Travis CI."
+tags: [android, maven, travis]
 ---
 {% include JB/setup %}
 
-## Continuous integration
+Running integration tests for an Android Maven project in multiple emulators on Travis CI.
+
+## Background
 
 While doing some projects in Ruby over the last few years, the concept of [test-driven development][1] grew on me.
 Automatically running these tests in some continuous integration environment is a very important part of TDD when
@@ -35,9 +37,9 @@ will keep on updating the code as I find better ways to do the CI.
 The first step is to get the project running locally with Maven. Unfortunately, this is no simple task. I might write
 a blog post about this in the future, but until then you can:
 
- 1. Look at the [project setup][3] used for this post.
- 2. Read the [official documentation][5].
- 3. Look at the [official moreseflash sample][6].
+ * Look at the [project setup][3] used for this post.
+ * Read the [official documentation][5].
+ * Look at the [official moreseflash sample][6].
 
 The end result is that the entire project can be built and tested using a command such as
 `mvn install -Pintegration-tests`, assuming the environment is setup and an emulator is running.
@@ -51,7 +53,6 @@ language: java
 jdk: oraclejdk7
 env:
     matrix:
-    # android-16 is always included
     - ANDROID_SDKS=android-8            ANDROID_TARGET=android-8   ANDROID_ABI=armeabi
     - ANDROID_SDKS=android-10           ANDROID_TARGET=android-10  ANDROID_ABI=armeabi
     - ANDROID_SDKS=sysimg-16            ANDROID_TARGET=android-16  ANDROID_ABI=armeabi-v7a
@@ -65,9 +66,7 @@ before_install:
     - export ANDROID_HOME=$PWD/android-sdk-linux
     - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools
 
-    # Install required components.
-    # For a full list, run `android list sdk -a --extended`
-    # Note that sysimg-16 downloads the ARM, x86 and MIPS images (we should optimize this).
+    # Install required Android components.
     - android update sdk --filter platform-tools,android-16,extra-android-support,$ANDROID_SDKS --no-ui --force
 
     # Create and start emulator
@@ -75,12 +74,13 @@ before_install:
     - emulator -avd test -no-skin -no-audio -no-window &
 
 before_script:
+    # Make sure the emulator has started before running tests
     - ./wait_for_emulator
 
 script: mvn install -Pintegration-tests -Dandroid.device=test
 {% endhighlight %}
 
-A lot of the configuration is based off [RapidFTR][7].
+A lot of the configuration is based on [RapidFTR][7].
 
 ### Installing the Android SDK
 
@@ -96,11 +96,37 @@ further (suggestions are welcome). We cannot use the specific id's for filters (
 may change when updates to the SDK are published.
 
 In my experience the ARM emulators start up significantly faster than the x86 emulators on Travis (not sure why),
- so I use them exclusively.
+ so I use ARM exclusively.
 
 ### Running the emulator
 
-We need to run the emulator in windowless mode - the `-no-window` option.
+Since we don't have any UI, we need to run the emulator with the options `-no-audio -no-window`. We run the emulator 
+as a background process, so we can continue with the build process.
+
+We need to make sure that the emulator has finished booting by the time the integration tests start. To do this we use
+a shell script that waits for the emulator before running the tests. However, we start the emulator in before_install
+(before Maven dependencies are installed), and wait for the emulator in before_script (after Maven dependencies are 
+installed). This way the emulator starts up while the dependencies are being installed, and most of the time it has
+finished booting by the time our before_script runs - therefore we don't slow down the build by waiting for the emulator.
+
+### Testing on multiple emulators
+
+We can use the Travis [Build Matrix][9] feature to test on multiple emulators in parallel. We specificy the configuration
+in the env/matrix section. For each target, we define:
+
+ * Which additional Android emulators/components to install (ANDROID_SDKS).
+ * Which target (ANDROID_TARGET) and ABI (ANDROID_ABI) to use when creating the emulator. Note that the available ABI's
+   are different for each target (use `android list target` to list them).
+
+## Results
+
+With our [example project][4], we successfully built and tested on four different platform versions in about 6 minutes.
+While this is slow, most of the time is spent in the environment setup, so larger projects should not take significantly
+longer (the Maven build took 30 seconds in this project). Most of the time is spent installing the SDK, starting up the
+ emulator and installing the Maven dependencies.
+
+We might be able to optimize the build time by installing less SDK components (sysimg-16 installs 3 different emulators),
+and/or by using precreated avd's (instead of creating them from scratch every time).
 
 
  [1]: http://en.wikipedia.org/wiki/Test-driven_development
@@ -111,3 +137,4 @@ We need to run the emulator in windowless mode - the `-no-window` option.
  [6]: https://github.com/jayway/maven-android-plugin-samples/tree/master/morseflash
  [7]: https://github.com/rapidftr/RapidFTR---Android/blob/master/.travis.yml
  [8]: http://levi-wilson.blogspot.com/2012/06/maven-android-travis-ci-and-more.html
+ [9]: http://about.travis-ci.org/docs/user/build-configuration/#The-Build-Matrix
