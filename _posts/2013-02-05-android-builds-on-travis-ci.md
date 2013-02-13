@@ -10,6 +10,10 @@ tags: [android, maven, travis]
 
 Running integration tests for an Android Maven project in multiple emulators on Travis CI.
 
+### Update 2013/02/13
+
+Include my experience on Travis Pro. Add command to list Android SDK components.
+
 ## Background
 
 While doing some projects in Ruby over the last few years, the concept of [test-driven development][1] grew on me.
@@ -93,7 +97,7 @@ environment we test on. Using the `--filter` option to `android update sdk`, we 
 install, instead of installing everything (this wastes precious minutes on Travis).
 Unfortunately, the sysimg filters install the ARM, x86 and MIPS emulators, and there is no simple way to filter this
 further (suggestions are welcome). We cannot use the specific id's for filters (as suggested in some posts), as these
-may change when updates to the SDK are published.
+may change when updates to the SDK are published. For a list of the available components, run `android list sdk -a -e`.
 
 In my experience the ARM emulators start up significantly faster than the x86 emulators on Travis (not sure why),
  so I use ARM exclusively.
@@ -128,6 +132,12 @@ longer (the Maven build took 30 seconds in this project). Most of the time is sp
 We might be able to optimize the build time by installing less SDK components (sysimg-16 installs 3 different emulators),
 and/or by using precreated avd's (instead of creating them from scratch every time).
 
+## Travis Pro
+
+This works exactly the same on [Travis Pro][10]. The only modification I had to make for our private project
+was to modify `~/.m2/settings.xml` to include read-only credentials for our private Maven repository, so that
+Maven could install our private dependencies.
+
 
  [1]: http://en.wikipedia.org/wiki/Test-driven_development
  [2]: https://travis-ci.org
@@ -138,3 +148,4 @@ and/or by using precreated avd's (instead of creating them from scratch every ti
  [7]: https://github.com/rapidftr/RapidFTR---Android/blob/master/.travis.yml
  [8]: http://levi-wilson.blogspot.com/2012/06/maven-android-travis-ci-and-more.html
  [9]: http://about.travis-ci.org/docs/user/build-configuration/#The-Build-Matrix
+ [10]: http://travis-ci.com
