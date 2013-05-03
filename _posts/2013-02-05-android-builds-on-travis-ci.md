@@ -113,6 +113,9 @@ a shell script that waits for the emulator before running the tests. However, we
 installed). This way the emulator starts up while the dependencies are being installed, and most of the time it has
 finished booting by the time our before_script runs - therefore we don't slow down the build by waiting for the emulator.
 
+Please note that the `wait_for_emulator` script must be executable. On Linux/Mac this is achieved by running
+`chmod +x wait_for_emulator`.
+
 ### Testing on multiple emulators
 
 We can use the Travis [Build Matrix][9] feature to test on multiple emulators in parallel. We specificy the configuration
