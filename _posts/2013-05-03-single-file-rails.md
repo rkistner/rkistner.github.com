@@ -10,6 +10,8 @@ tags: [ruby, rails, rspec]
 
 Creating a Rails 3.2 application in a single file for testing a gem.
 
+*Update 2013/05/27:* configure Rails.root for the application.
+
 ## Background
 
 Gems often provide functionality specific to Rails applications, without necessarily depending on Rails themselves.
@@ -34,6 +36,9 @@ require 'rails'
 require 'action_controller/railtie'
 
 class Dummy < Rails::Application
+  # Set Rails.root to the same folder as this file
+  config.root = File.dirname(__FILE__)
+
   # Rails needs these keys, but they don't really have to be secret for our tests
   config.session_store :cookie_store, key: '****************************************'
   config.secret_token = '****************************************'
