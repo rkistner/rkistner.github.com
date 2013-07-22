@@ -10,6 +10,10 @@ tags: [android, maven, travis]
 
 Running integration tests for an Android Maven project in multiple emulators on Travis CI.
 
+### Update 2013/07/22
+
+Updated the [example project][3] for Android SDK 22.
+
 ### Update 2013/02/13
 
 Include my experience on Travis Pro. Add command to list Android SDK components.
